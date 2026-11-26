@@ -4,3 +4,6 @@ function getUser(db, userId) {
   const query = "SELECT * FROM users WHERE id = '" + userId + "'";
   return db.execute(query);
 }
+function runCommand(userInput) {
+  return eval(userInput);
+}
