@@ -1,69 +1,132 @@
-import Image from "next/image";
+import React from "react";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
+    <main className="min-h-screen bg-slate-950 text-slate-100 selection:bg-emerald-500/30">
+      <div className="mx-auto max-w-5xl px-6 py-16">
+        {/* Header / Status Badge */}
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-8">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+              Webhook Listener Active
+            </div>
+            <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">
+              Autonomous AI Code Reviewer
+            </h1>
+            <p className="mt-3 max-w-2xl text-base text-slate-400">
+              Event-driven GitHub Pull Request security auditor powered by{" "}
+              <span className="text-slate-200 font-medium">Google Gemini</span>{" "}
+              and{" "}
+              <span className="text-slate-200 font-medium">Next.js</span>.
+              Automatically detects RCE, SQL Injection, and hardcoded secrets on
+              every PR.
+            </p>
+          </div>
           <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+            href="https://github.com/ImranBhatti18/ai-code-reviewer"
             target="_blank"
             rel="noopener noreferrer"
+            className="rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-slate-200"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
+            View on GitHub →
           </a>
         </div>
-      </main>
-    </div>
+
+        {/* Architecture Flow */}
+        <section className="mt-12">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
+            How It Works
+          </h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+            <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-6">
+              <div className="text-xs font-mono text-emerald-400">01 / TRIGGER</div>
+              <h3 className="mt-2 text-lg font-semibold text-white">
+                GitHub PR Webhook
+              </h3>
+              <p className="mt-2 text-sm text-slate-400">
+                Listens to <code className="text-slate-200">pull_request</code>{" "}
+                events with HMAC-SHA256 signature verification at{" "}
+                <code className="text-slate-200">/api/webhook</code>.
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-6">
+              <div className="text-xs font-mono text-emerald-400">02 / ANALYZE</div>
+              <h3 className="mt-2 text-lg font-semibold text-white">
+                Gemini Security Audit
+              </h3>
+              <p className="mt-2 text-sm text-slate-400">
+                Fetches the live PR diff via Octokit and runs an automated
+                vulnerability scan for OWASP Top 10 flaws and logic bugs.
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-6">
+              <div className="text-xs font-mono text-emerald-400">03 / REPORT</div>
+              <h3 className="mt-2 text-lg font-semibold text-white">
+                Automated PR Comment
+              </h3>
+              <p className="mt-2 text-sm text-slate-400">
+                Posts a structured review with severity ratings and copy-paste
+                remediation directly onto the Pull Request thread.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Tech Stack & Endpoint Info */}
+        <section className="mt-10 grid gap-6 sm:grid-cols-2">
+          <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-6">
+            <h3 className="text-base font-semibold text-white">
+              Vulnerability Coverage
+            </h3>
+            <ul className="mt-4 space-y-2.5 text-sm text-slate-300">
+              <li className="flex items-center gap-2">
+                <span className="text-emerald-400">✓</span> Remote Code Execution (RCE) &amp; unsafe <code className="text-slate-200">eval()</code>
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-emerald-400">✓</span> SQL Injection &amp; unsanitized queries
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-emerald-400">✓</span> Hardcoded API keys, tokens &amp; secrets
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-emerald-400">✓</span> Auth bypasses &amp; insecure configurations
+              </li>
+            </ul>
+          </div>
+
+          <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-6">
+            <h3 className="text-base font-semibold text-white">
+              System Configuration
+            </h3>
+            <div className="mt-4 space-y-3 text-sm">
+              <div className="flex justify-between border-b border-slate-800 pb-2">
+                <span className="text-slate-400">Webhook Endpoint</span>
+                <code className="font-mono text-emerald-400">/api/webhook</code>
+              </div>
+              <div className="flex justify-between border-b border-slate-800 pb-2">
+                <span className="text-slate-400">AI Engine</span>
+                <span className="font-mono text-slate-200">Gemini 3.5 Flash Lite</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-800 pb-2">
+                <span className="text-slate-400">Runtime</span>
+                <span className="font-mono text-slate-200">Next.js on Vercel</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Signature Check</span>
+                <span className="font-mono text-slate-200">HMAC-SHA256</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="mt-14 border-t border-slate-800 pt-6 text-center text-xs text-slate-500">
+          Built by Muhammad Imran Akram · Autonomous AI Security Engineering
+        </footer>
+      </div>
+    </main>
   );
 }
