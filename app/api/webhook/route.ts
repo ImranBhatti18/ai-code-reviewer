@@ -112,9 +112,8 @@ const commitSha = payload.pull_request.head.sha;
 
 // 2. Check karna ke AI review mein CRITICAL ya HIGH risk hai ya nahi
 const isHighRisk =
-  reviewComment.includes("Risk Level: CRITICAL") ||
-  reviewComment.includes("Risk Level: HIGH") ||
-  reviewComment.includes("Severity: Critical");
+  /\b(CRITICAL|DO NOT MERGE)\b/i.test(reviewComment) ||
+  /risk level.*high/i.test(reviewComment);
 
 // 3. GitHub par Pass (green tick) ya Fail (red cross) Status Check bhejna
 await octokit.repos.createCommitStatus({
