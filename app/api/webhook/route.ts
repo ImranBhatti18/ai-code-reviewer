@@ -106,6 +106,27 @@ ${codeDiff}
       issue_number: pull_number,
       body: `## 🤖 Autonomous AI Code & Security Review\n\n${reviewComment}`,
     });
+    
+    // 1. PR ke latest commit ka SHA nikalna
+const commitSha = payload.pull_request.head.sha;
+
+// 2. Check karna ke AI review mein CRITICAL ya HIGH risk hai ya nahi
+const isHighRisk =
+  reviewText.includes("Risk Level: CRITICAL") ||
+  reviewText.includes("Risk Level: HIGH") ||
+  reviewText.includes("Severity: Critical");
+
+// 3. GitHub par Pass (green tick) ya Fail (red cross) Status Check bhejna
+await octokit.repos.createCommitStatus({
+  owner,
+  repo,
+  sha: commitSha,
+  state: isHighRisk ? "failure" : "success",
+  context: "AI Security Audit",
+  description: isHighRisk
+    ? "CRITICAL/HIGH vulnerability detected. Fix before merging."
+    : "No critical security vulnerabilities found.",
+});
 
     return NextResponse.json({ message: "Review posted successfully!" }, { status: 200 });
   } catch (error) {
