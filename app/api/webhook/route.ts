@@ -27,6 +27,83 @@ function verifySignature(payload: string, signature: string | null): boolean {
   }
 }
 
+async function scanDependencies(
+  octokit: Octokit,
+  owner: string,
+  repo: string,
+  commitSha: string
+): Promise<{ report: string; hasVulnerabilities: boolean }> {
+  try {
+    const { data } = await octokit.repos.getContent({
+      owner,
+      repo,
+      path: "package.json",
+      ref: commitSha,
+    });
+
+    if (Array.isArray(data) || !("content" in data)) {
+      return { report: "", hasVulnerabilities: false };
+    }
+
+    const pkgJson = JSON.parse(
+      Buffer.from(data.content, "base64").toString("utf-8")
+    );
+
+    const allDeps: Record<string, string> = {
+      ...(pkgJson.dependencies || {}),
+      ...(pkgJson.devDependencies || {}),
+    };
+
+    const depEntries = Object.entries(allDeps);
+    if (depEntries.length === 0) {
+      return { report: "", hasVulnerabilities: false };
+    }
+
+    const queries = depEntries.map(([name, rawVersion]) => ({
+      package: { name, ecosystem: "npm" },
+      version: rawVersion.replace(/^[\^~>=<]+/, ""),
+    }));
+
+    const osvRes = await fetch("https://api.osv.dev/v1/querybatch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ queries }),
+    });
+
+    if (!osvRes.ok) {
+      return { report: "", hasVulnerabilities: false };
+    }
+
+    const osvData = (await osvRes.json()) as {
+      results?: Array<{ vulns?: Array<{ id: string }> }>;
+    };
+
+    const findings: string[] = [];
+    osvData.results?.forEach((res, idx) => {
+      if (res.vulns && res.vulns.length > 0) {
+        const [pkgName, pkgVer] = depEntries[idx];
+        const ids = res.vulns.slice(0, 3).map((v) => `\`${v.id}\``).join(", ");
+        findings.push(`- **${pkgName}@${pkgVer}** — Known CVEs: ${ids}`);
+      }
+    });
+
+    if (findings.length === 0) {
+      return {
+        report:
+          "\n\n---\n### 📦 Dependency Vulnerability Scan (OSV.dev)\n✅ No known CVEs found in `package.json` dependencies.",
+        hasVulnerabilities: false,
+      };
+    }
+
+    return {
+      report: `\n\n---\n### 📦 Dependency Vulnerability Scan (OSV.dev)\n🚨 **${findings.length} vulnerable package(s) detected:**\n${findings.join("\n")}`,
+      hasVulnerabilities: true,
+    };
+  } catch {
+    return { report: "", hasVulnerabilities: false };
+  }
+}
+
 // 3. Main Webhook Handler (Jab GitHub par PR open ya update ho)
 export async function POST(req: NextRequest) {
   try {
@@ -99,21 +176,25 @@ ${codeDiff}
     const reviewComment =
       response.text || "AI review could not be generated at this time.";
 
-    // GitHub PR par automatically comment post karein
+  // 1. PR ke latest commit ka SHA nikalna
+    const commitSha = payload.pull_request.head.sha;
+
+    // 2. Dependency CVE Scan chalana (OSV.dev)
+    const depScan = await scanDependencies(octokit, owner, repo, commitSha);
+
+    // 3. GitHub PR par AI Review + Dependency Scan comment post karna
     await octokit.issues.createComment({
       owner,
       repo,
       issue_number: pull_number,
-      body: `## 🤖 Autonomous AI Code & Security Review\n\n${reviewComment}`,
+      body: `## 🤖 Autonomous AI Code & Security Review\n\n${reviewComment}${depScan.report}`,
     });
 
-    // 1. PR ke latest commit ka SHA nikalna
-const commitSha = payload.pull_request.head.sha;
-
-// 2. Check karna ke AI review mein CRITICAL ya HIGH risk hai ya nahi
-const isHighRisk =
-  /\b(CRITICAL|DO NOT MERGE)\b/i.test(reviewComment) ||
-  /risk level.*high/i.test(reviewComment);
+    // 4. Check karna ke AI review ya Dependencies mein koi critical/high issue hai ya nahi
+    const isHighRisk =
+      depScan.hasVulnerabilities ||
+      /\b(CRITICAL|DO NOT MERGE)\b/i.test(reviewComment) ||
+      /risk level.*high/i.test(reviewComment);
 
 // 3. GitHub par Pass (green tick) ya Fail (red cross) Status Check bhejna
 await octokit.repos.createCommitStatus({
